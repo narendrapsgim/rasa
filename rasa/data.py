@@ -11,6 +11,7 @@ from rasa.constants import DEFAULT_E2E_TESTS_PATH
 
 logger = logging.getLogger(__name__)
 MARKDOWN_FILE_EXTENSION = ".md"
+YAML_FILE_EXTENSION = ".yml"
 JSON_FILE_EXTENSION = ".json"
 
 
@@ -123,8 +124,10 @@ def _find_core_nlu_files_in_directory(directory: Text,) -> Tuple[Set[Text], Set[
 
 def _is_valid_filetype(path: Text) -> bool:
     is_file = os.path.isfile(path)
-    is_datafile = path.endswith(JSON_FILE_EXTENSION) or path.endswith(
-        MARKDOWN_FILE_EXTENSION
+    is_datafile = (
+        path.endswith(JSON_FILE_EXTENSION)
+        or path.endswith(MARKDOWN_FILE_EXTENSION)
+        or path.endswith(YAML_FILE_EXTENSION)
     )
 
     return is_file and is_datafile
