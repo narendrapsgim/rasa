@@ -1,9 +1,11 @@
 from pathlib import Path
+from typing import List, Text
 from unittest.mock import Mock
 
 import pytest
 from _pytest.monkeypatch import MonkeyPatch
 
+from rasa.core.domain import Domain
 from rasa.core.interpreter import RegexInterpreter, RasaNLUInterpreter
 from rasa.core.train import train
 from rasa.core.agent import Agent
@@ -14,11 +16,11 @@ from rasa.core.training.visualization import visualize_stories
 from tests.core.conftest import DEFAULT_DOMAIN_PATH_WITH_SLOTS, DEFAULT_STORIES_FILE
 
 
-async def test_story_visualization(default_domain, tmpdir):
+async def test_story_visualization(default_domain: Domain, tmp_path: Path):
     story_steps = await StoryFileReader.read_from_file(
         "data/test_stories/stories.md", default_domain, interpreter=RegexInterpreter()
     )
-    out_file = tmpdir.join("graph.html").strpath
+    out_file = str(tmp_path / "graph.html")
     generated_graph = await visualize_stories(
         story_steps,
         default_domain,
@@ -32,7 +34,7 @@ async def test_story_visualization(default_domain, tmpdir):
     assert len(generated_graph.edges()) == 56
 
 
-async def test_story_visualization_with_merging(default_domain):
+async def test_story_visualization_with_merging(default_domain: Domain):
     story_steps = await StoryFileReader.read_from_file(
         "data/test_stories/stories.md", default_domain, interpreter=RegexInterpreter()
     )
@@ -48,11 +50,11 @@ async def test_story_visualization_with_merging(default_domain):
     assert 20 < len(generated_graph.edges()) < 33
 
 
-async def test_training_script(tmpdir):
+async def test_training_script(tmp_path: Path):
     await train(
         DEFAULT_DOMAIN_PATH_WITH_SLOTS,
         DEFAULT_STORIES_FILE,
-        tmpdir.strpath,
+        str(tmp_path),
         policy_config="data/test_config/max_hist_config.yml",
         interpreter=RegexInterpreter(),
         additional_arguments={},
@@ -60,17 +62,18 @@ async def test_training_script(tmpdir):
     assert True
 
 
-async def test_training_script_without_max_history_set(tmpdir):
+async def test_training_script_without_max_history_set(tmp_path: Path):
+    tmpdir = str(tmp_path)
     await train(
         DEFAULT_DOMAIN_PATH_WITH_SLOTS,
         DEFAULT_STORIES_FILE,
-        tmpdir.strpath,
+        tmpdir,
         interpreter=RegexInterpreter(),
         policy_config="data/test_config/no_max_hist_config.yml",
         additional_arguments={},
     )
 
-    agent = Agent.load(tmpdir.strpath)
+    agent = Agent.load(tmpdir)
     for policy in agent.policy_ensemble.policies:
         if hasattr(policy.featurizer, "max_history"):
             if type(policy) == FormPolicy:
@@ -82,16 +85,18 @@ async def test_training_script_without_max_history_set(tmpdir):
                 )
 
 
-async def test_training_script_with_max_history_set(tmpdir):
+async def test_training_script_with_max_history_set(tmp_path: Path):
+    tmpdir = str(tmp_path)
+
     await train(
         DEFAULT_DOMAIN_PATH_WITH_SLOTS,
         DEFAULT_STORIES_FILE,
-        tmpdir.strpath,
+        tmpdir,
         interpreter=RegexInterpreter(),
         policy_config="data/test_config/max_hist_config.yml",
         additional_arguments={},
     )
-    agent = Agent.load(tmpdir.strpath)
+    agent = Agent.load(tmpdir)
     for policy in agent.policy_ensemble.policies:
         if hasattr(policy.featurizer, "max_history"):
             if type(policy) == FormPolicy:
@@ -100,11 +105,11 @@ async def test_training_script_with_max_history_set(tmpdir):
                 assert policy.featurizer.max_history == 5
 
 
-async def test_training_script_with_restart_stories(tmpdir):
+async def test_training_script_with_restart_stories(tmp_path: Path):
     await train(
         DEFAULT_DOMAIN_PATH_WITH_SLOTS,
         "data/test_stories/stories_restart.md",
-        tmpdir.strpath,
+        str(tmp_path),
         interpreter=RegexInterpreter(),
         policy_config="data/test_config/max_hist_config.yml",
         additional_arguments={},
@@ -112,7 +117,7 @@ async def test_training_script_with_restart_stories(tmpdir):
     assert True
 
 
-def configs_for_random_seed_test():
+def configs_for_random_seed_test() -> List[Text]:
     # define the configs for the random_seed tests
     return [
         "data/test_config/ted_random_seed.yaml",
@@ -121,14 +126,14 @@ def configs_for_random_seed_test():
 
 
 @pytest.mark.parametrize("config_file", configs_for_random_seed_test())
-async def test_random_seed(tmpdir, config_file):
+async def test_random_seed(tmp_path: Path, config_file: Text):
     # set random seed in config file to
     # generate a reproducible training result
 
     agent_1 = await train(
         DEFAULT_DOMAIN_PATH_WITH_SLOTS,
         DEFAULT_STORIES_FILE,
-        tmpdir.strpath + "1",
+        str(tmp_path / "1"),
         interpreter=RegexInterpreter(),
         policy_config=config_file,
         additional_arguments={},
@@ -137,7 +142,7 @@ async def test_random_seed(tmpdir, config_file):
     agent_2 = await train(
         DEFAULT_DOMAIN_PATH_WITH_SLOTS,
         DEFAULT_STORIES_FILE,
-        tmpdir.strpath + "2",
+        str(tmp_path / "2"),
         interpreter=RegexInterpreter(),
         policy_config=config_file,
         additional_arguments={},
