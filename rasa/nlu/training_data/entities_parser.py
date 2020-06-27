@@ -1,19 +1,14 @@
-# regex for: `[entity_text]((entity_type(:entity_synonym)?)|{entity_dict})`
 import re
 from json import JSONDecodeError
 from typing import Text, List, Dict, Match, Optional, NamedTuple
 
-from rasa.nlu.utils import build_entity
-
 from rasa.constants import DOCS_URL_TRAINING_DATA_NLU
-
 from rasa.nlu.constants import (
     ENTITY_ATTRIBUTE_GROUP,
     ENTITY_ATTRIBUTE_TYPE,
     ENTITY_ATTRIBUTE_ROLE,
     ENTITY_ATTRIBUTE_VALUE,
 )
-
 from rasa.utils.common import raise_warning
 
 GROUP_ENTITY_VALUE = "value"
@@ -46,8 +41,11 @@ class EntitiesParser:
         Args:
             example: intent example
 
-        Returns: list of extracted entities
+        Returns:
+            Extracted entities
         """
+        import rasa.nlu.utils as rasa_nlu_utils
+
         entities = []
         offset = 0
 
@@ -58,7 +56,7 @@ class EntitiesParser:
             end_index = start_index + len(entity_attributes.text)
             offset += len(match.group(0)) - len(entity_attributes.text)
 
-            entity = build_entity(
+            entity = rasa_nlu_utils.build_entity(
                 start_index,
                 end_index,
                 entity_attributes.value,
@@ -73,7 +71,14 @@ class EntitiesParser:
     @staticmethod
     def _extract_entity_attributes(match: Match) -> EntityAttributes:
         """Extract the entity attributes, i.e. type, value, etc., from the
-        regex match."""
+        regex match.
+
+        Args:
+            match: Regex match to extract the entity attributes from.
+
+        Returns:
+            EntityAttributes object
+        """
         entity_text = match.groupdict()[GROUP_ENTITY_TEXT]
 
         if match.groupdict()[GROUP_ENTITY_DICT]:
@@ -107,7 +112,7 @@ class EntitiesParser:
 
     @staticmethod
     def _get_validated_dict(json_str: Text) -> Dict[Text, Text]:
-        """Converts the provided json_str to a valid dict containing the entity
+        """Converts the provided `json_str` to a valid dict containing the entity
         attributes.
 
         Users can specify entity roles, synonyms, groups for an entity in a dict, e.g.
@@ -121,7 +126,7 @@ class EntitiesParser:
             JSONDecodeError if provided entity dict is not valid json.
 
         Returns:
-            a proper python dict
+            Deserialized and validated `json_str`.
         """
         import json
         import rasa.utils.validation as validation_utils
@@ -132,9 +137,9 @@ class EntitiesParser:
             data = json.loads(f"{{{json_str}}}")
         except JSONDecodeError as e:
             raise_warning(
-                f"Incorrect training data format ('{{{json_str}}}'), make sure your "
-                f"data is valid. For more information about the format visit "
-                f"{DOCS_URL_TRAINING_DATA_NLU}."
+                f"Incorrect training data format ('{{{json_str}}}'). Make sure your "
+                f"data is valid.",
+                docs=DOCS_URL_TRAINING_DATA_NLU,
             )
             raise e
 
@@ -144,6 +149,15 @@ class EntitiesParser:
 
     @staticmethod
     def replace_entities(training_example: Text) -> Text:
+        """Replace special symbols related to the entities in the provided
+           training example.
+
+        Args:
+            training_example: Original training example with special symbols.
+
+        Returns:
+            String with removed special symbols.
+        """
         return re.sub(
             ENTITY_REGEX, lambda m: m.groupdict()[GROUP_ENTITY_TEXT], training_example
         )

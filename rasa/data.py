@@ -11,7 +11,7 @@ from rasa.constants import DEFAULT_E2E_TESTS_PATH
 
 logger = logging.getLogger(__name__)
 MARKDOWN_FILE_EXTENSION = ".md"
-YAML_FILE_EXTENSION = ".yml"
+YAML_FILE_EXTENSIONS = ["yml", "yaml"]
 JSON_FILE_EXTENSION = ".json"
 
 
@@ -127,7 +127,7 @@ def _is_valid_filetype(path: Text) -> bool:
     is_datafile = (
         path.endswith(JSON_FILE_EXTENSION)
         or path.endswith(MARKDOWN_FILE_EXTENSION)
-        or path.endswith(YAML_FILE_EXTENSION)
+        or path.split(".") in YAML_FILE_EXTENSIONS
     )
 
     return is_file and is_datafile

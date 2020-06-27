@@ -101,7 +101,7 @@ nlu:
     assert len(result.training_examples) == 1
     actual_example = result.training_examples[0]
     assert actual_example.data["intent"] == intent_name
-    assert len(actual_example.data.get("entities")) == expected_num_entities
+    assert len(actual_example.data.get("entities", [])) == expected_num_entities
 
 
 def test_synonyms_are_parsed():
@@ -117,6 +117,8 @@ def test_synonyms_are_parsed():
     training_data = parser.reads(synonym_example)
 
     assert len(training_data.entity_synonyms) == 2
+    assert training_data.entity_synonyms["pink pig"] == "savings"
+    assert training_data.entity_synonyms["savings account"] == "savings"
 
 
 def test_lookup_is_parsed():

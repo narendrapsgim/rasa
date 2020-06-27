@@ -4,12 +4,12 @@ import re
 from typing import Any, Dict, List, Optional, Text, Union, Type, Tuple
 
 import numpy as np
-
-from rasa.constants import DOCS_URL_TRAINING_DATA_NLU
-import rasa.utils.io
-import rasa.utils.io
 import scipy.sparse
+
+import rasa.utils.io
+import rasa.utils.io
 from rasa.nlu import utils
+from rasa.nlu.components import Component
 from rasa.nlu.config import RasaNLUModelConfig
 from rasa.nlu.constants import (
     RESPONSE,
@@ -19,12 +19,10 @@ from rasa.nlu.constants import (
     FEATURE_TYPE_SEQUENCE,
     FEATURIZER_CLASS_ALIAS,
 )
-from rasa.nlu.tokenizers.tokenizer import Tokenizer
-from rasa.nlu.components import Component
 from rasa.nlu.featurizers.featurizer import SparseFeaturizer, Features
-from rasa.nlu.training_data import Message, TrainingData
-import rasa.utils.common as common_utils
 from rasa.nlu.model import Metadata
+from rasa.nlu.tokenizers.tokenizer import Tokenizer
+from rasa.nlu.training_data import Message, TrainingData
 
 logger = logging.getLogger(__name__)
 
