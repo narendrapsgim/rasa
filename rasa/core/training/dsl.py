@@ -360,7 +360,7 @@ class StoryFileReader:
                 # end-to-end BOT message
                 elif line.startswith("<B>"):
                     event_name, parameters = self._parse_event_line(line[3:])
-                    self.add_event(event_name, parameters)
+                    self.add_event(event_name, parameters, is_e2e=True)
                 # end-to-end USER message
                 elif line.startswith("<U>"):
                     user_messages = [el.strip() for el in line[3:].split(" OR ")]
@@ -494,7 +494,7 @@ class StoryFileReader:
             parsed_messages.append(parsed)
         self.current_step_builder.add_user_messages(parsed_messages)
 
-    def add_event(self, event_name, parameters):
+    def add_event(self, event_name, parameters, is_e2e: bool = False) -> None:
 
         # add 'name' only if event is not a SlotSet,
         # because there might be a slot with slot_key='name'
@@ -504,6 +504,10 @@ class StoryFileReader:
             action_as_message = MarkdownReader().parse_e2e_training_example(event_name)
             parameters["name"] = action_as_message.text
             parameters["message"] = action_as_message
+            if is_e2e:
+                # TODO: This is somewhat hacky and needs be cleaned up in YAML
+                #  implementation
+                parameters["e2e_text"] = action_as_message.text
 
         parsed_events = Event.from_story_string(
             event_name, parameters, default=ActionExecuted
